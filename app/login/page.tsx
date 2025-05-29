@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth"
@@ -12,12 +12,55 @@ import { ShoppingCart } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { toast } from "@/hooks/use-toast"
 
+// The Suspense wrapper
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { signIn, user, isLoading: authLoading } = useAuth()
   const router = useRouter()
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        signIn={signIn}
+        user={user}
+        authLoading={authLoading}
+        router={router}
+      />
+    </Suspense>
+  )
+}
+
+function LoginContent({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  isLoading,
+  setIsLoading,
+  signIn,
+  user,
+  authLoading,
+  router,
+}: {
+  email: string
+  setEmail: React.Dispatch<React.SetStateAction<string>>
+  password: string
+  setPassword: React.Dispatch<React.SetStateAction<string>>
+  isLoading: boolean
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+  signIn: any
+  user: any
+  authLoading: boolean
+  router: any
+}) {
   const searchParams = useSearchParams()
 
   // Get the redirect path from URL query parameters
