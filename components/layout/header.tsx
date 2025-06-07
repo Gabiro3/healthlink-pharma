@@ -3,6 +3,7 @@
 import { Search, Bell, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -27,6 +28,11 @@ export function Header({ title, subtitle, user }: HeaderProps) {
   const getInitials = (email: string) => {
     return email.split("@")[0].slice(0, 2).toUpperCase()
   }
+  const supabase = createClient()
+  const handleLogout = async () => {
+      await supabase.auth.signOut()
+      window.location.href = "/login"
+    }
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -79,7 +85,7 @@ export function Header({ title, subtitle, user }: HeaderProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem className="bg-red-500 text-white" onClick={handleLogout}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
