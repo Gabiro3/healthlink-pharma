@@ -20,7 +20,16 @@ import {
   Send,
   Ban,
   Eye,
+  AlertTriangle,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface SuperAdminStats {
   total_pharmacies: number
@@ -32,59 +41,62 @@ interface SuperAdminStats {
   pending_invoices: number
 }
 
-interface SuperAdminDashboardProps {
-  stats: SuperAdminStats
+interface PharmacyWithSales {
+  id: string
+  name: string
+  code: string
+  address: string
+  email: string
+  contact_number: string
+  users: number
+  total_sales: number
+  monthly_sales: number
+  status: "active" | "inactive"
+  created_at: string
 }
 
-export function SuperAdminDashboard({ stats }: SuperAdminDashboardProps) {
+interface SuperAdminDashboardProps {
+  stats: SuperAdminStats
+  pharmacies: PharmacyWithSales[]
+}
+
+export function SuperAdminDashboard({ stats, pharmacies }: SuperAdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
+  const [selectedPharmacy, setSelectedPharmacy] = useState<PharmacyWithSales | null>(null)
+  const [isRevoking, setIsRevoking] = useState(false)
+  const billingData: any[] = [] // Declare billingData variable
 
-  // Mock data for demonstration
-  const pharmacies = [
-    {
-      id: "1",
-      name: "MediCare Pharmacy",
-      code: "PH-12345",
-      address: "123 Main St, Downtown",
-      users: 5,
-      sales: 25000,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "HealthPlus Pharmacy",
-      code: "PH-67890",
-      address: "456 Oak Ave, Uptown",
-      users: 3,
-      sales: 18000,
-      status: "active",
-    },
-  ]
+  const handleRevokeAccess = (pharmacy: PharmacyWithSales) => {
+    setSelectedPharmacy(pharmacy)
+    setRevokeDialogOpen(true)
+  }
 
-  const billingData = [
-    {
-      id: "1",
-      pharmacy: "MediCare Pharmacy",
-      period: "2024-01",
-      sales: 25000,
-      serviceCharge: 500,
-      userFees: 50,
-      total: 550,
-      status: "paid",
-    },
-    {
-      id: "2",
-      pharmacy: "HealthPlus Pharmacy",
-      period: "2024-01",
-      sales: 18000,
-      serviceCharge: 360,
-      userFees: 30,
-      total: 390,
-      status: "pending",
-    },
-  ]
+  const confirmRevokeAccess = async () => {
+    if (!selectedPharmacy) return
+
+    setIsRevoking(true)
+    try {
+      const response = await fetch(`/api/super-admin/pharmacies/${selectedPharmacy.id}/revoke-access`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        // Refresh the page or update the state
+        window.location.reload()
+      } else {
+        console.error("Failed to revoke access")
+      }
+    } catch (error) {
+      console.error("Error revoking access:", error)
+    } finally {
+      setIsRevoking(false)
+      setRevokeDialogOpen(false)
+      setSelectedPharmacy(null)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -303,7 +315,7 @@ export function SuperAdminDashboard({ stats }: SuperAdminDashboardProps) {
             </CardContent>
           </Card>
 
-          {/* Pharmacies Table */}
+          {/* Enhanced Pharmacies Table */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -316,23 +328,28 @@ export function SuperAdminDashboard({ stats }: SuperAdminDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-7 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
+                <div className="grid grid-cols-8 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
                   <span>Pharmacy Name</span>
                   <span>Code</span>
-                  <span>Address</span>
+                  <span>Contact</span>
                   <span>Users</span>
+                  <span>Total Sales</span>
                   <span>Monthly Sales</span>
                   <span>Status</span>
                   <span>Actions</span>
                 </div>
 
                 {pharmacies.map((pharmacy) => (
-                  <div key={pharmacy.id} className="grid grid-cols-7 gap-4 items-center py-3 border-b border-gray-100">
-                    <span className="text-sm font-medium">{pharmacy.name}</span>
+                  <div key={pharmacy.id} className="grid grid-cols-8 gap-4 items-center py-3 border-b border-gray-100">
+                    <div>
+                      <span className="text-sm font-medium">{pharmacy.name}</span>
+                      <p className="text-xs text-gray-500">{pharmacy.email}</p>
+                    </div>
                     <span className="text-sm">{pharmacy.code}</span>
-                    <span className="text-sm">{pharmacy.address}</span>
+                    <span className="text-sm">{pharmacy.contact_number}</span>
                     <span className="text-sm">{pharmacy.users}</span>
-                    <span className="text-sm">${pharmacy.sales.toLocaleString()}</span>
+                    <span className="text-sm font-medium">${pharmacy.total_sales.toLocaleString()}</span>
+                    <span className="text-sm">${pharmacy.monthly_sales.toLocaleString()}</span>
                     <Badge className={getStatusColor(pharmacy.status)} variant="secondary">
                       {pharmacy.status}
                     </Badge>
@@ -343,15 +360,63 @@ export function SuperAdminDashboard({ stats }: SuperAdminDashboardProps) {
                       <Button variant="ghost" size="sm">
                         ✏️
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRevokeAccess(pharmacy)}
+                        className="text-red-600 hover:text-red-700"
+                      >
                         <Ban className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
                 ))}
+
+                {pharmacies.length === 0 && (
+                  <div className="text-center py-8">
+                    <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No pharmacies found</h3>
+                    <p className="text-gray-500">No pharmacies match your current filters.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
+
+          {/* Revoke Access Dialog */}
+          <Dialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Revoke Pharmacy Access</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to revoke access for all users associated with "{selectedPharmacy?.name}"? This
+                  action will deactivate all user accounts for this pharmacy and cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3" />
+                    <div>
+                      <h4 className="text-sm font-medium text-red-800">Warning</h4>
+                      <p className="text-sm text-red-700 mt-1">
+                        This will immediately revoke access for {selectedPharmacy?.users || 0} users associated with
+                        this pharmacy.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setRevokeDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={confirmRevokeAccess} disabled={isRevoking}>
+                  {isRevoking ? "Revoking..." : "Revoke Access"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4">
@@ -444,7 +509,7 @@ export function SuperAdminDashboard({ stats }: SuperAdminDashboardProps) {
                     <div key={pharmacy.id} className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">{pharmacy.name}</p>
-                        <p className="text-xs text-gray-500">${pharmacy.sales.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">${pharmacy.total_sales.toLocaleString()}</p>
                       </div>
                       <Badge variant="outline">#{index + 1}</Badge>
                     </div>

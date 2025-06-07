@@ -15,7 +15,7 @@ export type PharmacyUserData = {
 
 // Create a new user and associate with pharmacy
 export async function createPharmacyUser(userData: PharmacyUserData, createdBy: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   // Create the user in Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -70,51 +70,47 @@ export async function createPharmacyUser(userData: PharmacyUserData, createdBy: 
 
 // Get users for a pharmacy
 export async function getPharmacyUsers(pharmacyId: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
-    .from("pharmacy_users")
-    .select(`
-      id,
-      role,
-      is_active,
-      created_at,
-      users:user_id (
-        id,
-        email,
-        last_sign_in_at
-      )
-    `)
-    .eq("pharmacy_id", pharmacyId)
-    .order("created_at", { ascending: false })
+  .from("pharmacy_users")
+  .select(`
+    id,
+    email,
+    last_sign_in_at,
+    role,
+    is_active,
+    created_at
+  `)
+  .eq("pharmacy_id", pharmacyId)
+  .order("created_at", { ascending: false })
 
-  if (error) {
-    console.error("Error fetching pharmacy users:", error)
-    return { error, data: null }
-  }
+if (error) {
+  console.error("Error fetching pharmacy users:", error)
+  return { error, data: null }
+}
 
-  // Format the data
-  const formattedData = data.map((user) => ({
-    id: user.users.id,
-    email: user.users.email,
-    role: user.role,
-    is_active: user.is_active,
-    created_at: user.created_at,
-    last_sign_in_at: user.users.last_sign_in_at,
-  }))
+const formattedData = data.map((user) => ({
+  id: user.id,
+  email: user.email,
+  role: user.role,
+  is_active: user.is_active,
+  created_at: user.created_at,
+  last_sign_in_at: user.last_sign_in_at,
+}))
+
 
   return { error: null, data: formattedData }
 }
 
 // Update user role
 export async function updateUserRole(userId: string, pharmacyId: string, role: UserRole, updatedBy: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("pharmacy_users")
     .update({ role })
     .eq("user_id", userId)
-    .eq("pharmacy_id", pharmacyId)
     .select()
     .single()
 
@@ -138,13 +134,12 @@ export async function updateUserRole(userId: string, pharmacyId: string, role: U
 
 // Deactivate a user
 export async function deactivateUser(userId: string, pharmacyId: string, deactivatedBy: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("pharmacy_users")
     .update({ is_active: false })
     .eq("user_id", userId)
-    .eq("pharmacy_id", pharmacyId)
     .select()
     .single()
 
@@ -172,7 +167,7 @@ export async function createPharmacy(
   adminEmail: string,
   adminPassword: string,
 ) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   // Generate a pharmacy code
   const pharmacyCode = generatePharmacyCode()

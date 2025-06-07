@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const requestUrl = new URL(request.url)
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createClient()
 
     const { email, pharmacyCode } = await request.json()
 

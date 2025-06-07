@@ -19,9 +19,6 @@ export async function POST(request: Request) {
       .select("id, name, code")
       .eq("code", pharmacyCode)
       .eq("is_active", true)
-    
-    console.log("Verify pharmacy data:", data)
-    console.log("Verify pharmacy error:", error)
 
     if (error || !data) {
       return NextResponse.json({ error: "Invalid pharmacy code" }, { status: 404 })

@@ -48,21 +48,19 @@ export async function GET(request: Request) {
     }
 
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createClient()
 
     const { data, error } = await supabase
       .from("pharmacy_users")
       .select(`
-        id,
-        role,
-        is_active,
-        created_at,
-        users:user_id (
-          id,
-          email,
-          last_sign_in_at
-        )
-      `)
+  id,
+  role,
+  is_active,
+  created_at,
+  email,
+  last_sign_in_at
+`)
+
       .eq("pharmacy_id", user.pharmacy_id)
       .order("created_at", { ascending: false })
 
@@ -72,12 +70,12 @@ export async function GET(request: Request) {
 
     // Format the data
     const formattedData = data.map((pharmacyUser) => ({
-      id: pharmacyUser.users.id,
-      email: pharmacyUser.users.email,
+      id: pharmacyUser.id,
+      email: pharmacyUser.email,
       role: pharmacyUser.role,
       is_active: pharmacyUser.is_active,
       created_at: pharmacyUser.created_at,
-      last_sign_in_at: pharmacyUser.users.last_sign_in_at,
+      last_sign_in_at: pharmacyUser.last_sign_in_at,
     }))
 
     return NextResponse.json({ data: formattedData })

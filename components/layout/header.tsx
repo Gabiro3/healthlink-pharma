@@ -58,7 +58,7 @@ export function Header({ title, subtitle, user }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg" alt={user?.email} />
+                  <AvatarImage src="/logo.png" alt={user?.email} />
                   <AvatarFallback className="bg-teal-600 text-white">
                     {user?.email ? getInitials(user.email) : "U"}
                   </AvatarFallback>

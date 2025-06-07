@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth"
-import { getSuperAdminStats, isSuperAdmin } from "@/lib/admin"
+import { getSuperAdminStats, isSuperAdmin, getAllPharmaciesWithSales } from "@/lib/admin"
 import { Header } from "@/components/layout/header"
 import { SuperAdminDashboard } from "@/components/admin/super-admin-dashboard"
 import { redirect } from "next/navigation"
@@ -18,11 +18,18 @@ export default async function SuperAdminPage() {
     redirect("/dashboard")
   }
 
-  // Fetch super admin stats
-  const { data: stats, error } = await getSuperAdminStats()
+  // Fetch super admin stats and pharmacies
+  const [{ data: stats, error: statsError }, { data: pharmacies, error: pharmaciesError }] = await Promise.all([
+    getSuperAdminStats(),
+    getAllPharmaciesWithSales(),
+  ])
 
-  if (error) {
-    console.error("Error fetching super admin stats:", error)
+  if (statsError) {
+    console.error("Error fetching super admin stats:", statsError)
+  }
+
+  if (pharmaciesError) {
+    console.error("Error fetching pharmacies:", pharmaciesError)
   }
 
   return (
@@ -50,6 +57,7 @@ export default async function SuperAdminPage() {
               pending_invoices: 0,
             }
           }
+          pharmacies={pharmacies || []}
         />
       </div>
     </div>

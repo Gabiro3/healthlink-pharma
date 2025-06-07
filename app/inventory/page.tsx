@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth"
 import { getPharmacyProducts } from "@/lib/cache"
 import { Header } from "@/components/layout/header"
-import { InventoryManagement } from "@/components/inventory/inventory-management"
+import { EnhancedInventoryManagement } from "@/components/inventory/enhanced-inventory-management"
 import { redirect } from "next/navigation"
 
 export default async function InventoryPage() {
@@ -40,12 +40,14 @@ export default async function InventoryPage() {
 
   // Transform products to include status based on stock and expiry
   const productsWithStatus = products.map((product) => {
-    let status = "active" as const
+    let status
 
     if (product.stock_quantity === 0) {
       status = "out_of_stock"
     } else if (product.stock_quantity <= product.reorder_level) {
       status = "low_stock"
+    } else {
+      status = "active"
     }
 
     return { ...product, status }
@@ -64,7 +66,12 @@ export default async function InventoryPage() {
       />
 
       <div className="px-6">
-        <InventoryManagement products={productsWithStatus} damagedProducts={damagedProducts} />
+        <EnhancedInventoryManagement
+          products={productsWithStatus}
+          damagedProducts={damagedProducts}
+          pharmacyId={user.pharmacy_id}
+          userId={user.id}
+        />
       </div>
     </div>
   )

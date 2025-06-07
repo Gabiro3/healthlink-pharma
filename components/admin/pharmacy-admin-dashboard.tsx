@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { createClient } from "@/supabase/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Users,
@@ -16,7 +17,10 @@ import {
   Download,
   UserPlus,
   Crown,
+  BoxIcon,
+  Users2Icon,
 } from "lucide-react"
+import { AddProductDialog } from "@/components/inventory/add-product-dialog"
 
 interface PharmacyAdminStats {
   total_users: number
@@ -35,6 +39,16 @@ interface PharmacyAdminDashboardProps {
 
 export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: PharmacyAdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview")
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Fetch user session on mount
+  useEffect(() => {
+    async function fetchUser() {
+      const { data } = await createClient().auth.getSession()
+      setUserId(data.session?.user?.id ?? null)
+    }
+    fetchUser()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -51,15 +65,15 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
-          <Button size="sm" className="bg-lime-400 text-teal-800 hover:bg-lime-500">
-            <Plus className="w-4 h-4 mr-2" />
-            Quick Actions
+          <Button size="sm" className="bg-lime-400 text-teal-800 hover:bg-lime-500" onClick={() => window.location.href = '/admin/pharmacy/users'}>
+            <Users2Icon className="w-4 h-4 mr-2" />
+            Manage Users
           </Button>
         </div>
       </div>
 
       {/* Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -88,7 +102,7 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
             <DollarSign className="w-4 h-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.total_sales_this_month.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Rwf {stats.total_sales_this_month.toLocaleString()}</div>
             <p className="text-xs text-gray-500">Current month revenue</p>
           </CardContent>
         </Card>
@@ -99,22 +113,10 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
             <TrendingUp className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.total_sales_all_time.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Rwf {stats.total_sales_all_time.toLocaleString()}</div>
             <p className="text-xs text-gray-500">All time revenue</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
-            <ShoppingCart className="w-4 h-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active_orders}</div>
-            <p className="text-xs text-gray-500">Pending/processing</p>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
@@ -129,9 +131,8 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
 
       {/* Admin Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="products">Product Management</TabsTrigger>
           <TabsTrigger value="billing">Billing & Reports</TabsTrigger>
         </TabsList>
@@ -143,15 +144,15 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/admin/pharmacy/users'}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Add New User
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/products'}>
                   <Package className="w-4 h-4 mr-2" />
                   Add New Product
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/sales'}>
                   <DollarSign className="w-4 h-4 mr-2" />
                   View Sales Report
                 </Button>
@@ -194,133 +195,55 @@ export function PharmacyAdminDashboard({ stats, pharmacyName, pharmacyCode }: Ph
             </Card>
           </div>
         </TabsContent>
-
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>User Management</CardTitle>
-                <Button size="sm" className="bg-lime-400 text-teal-800 hover:bg-lime-500">
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add New User
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
-                  <span>Name</span>
-                  <span>Email</span>
-                  <span>Role</span>
-                  <span>Status</span>
-                  <span>Last Login</span>
-                  <span>Actions</span>
-                </div>
-
-                {/* Mock user data */}
-                {[
-                  {
-                    name: "John Doe",
-                    email: "john@pharmacy.com",
-                    role: "pharmacist",
-                    status: "active",
-                    lastLogin: "2 hours ago",
-                  },
-                  {
-                    name: "Jane Smith",
-                    email: "jane@pharmacy.com",
-                    role: "cashier",
-                    status: "active",
-                    lastLogin: "1 day ago",
-                  },
-                ].map((user, index) => (
-                  <div key={index} className="grid grid-cols-6 gap-4 items-center py-3 border-b border-gray-100">
-                    <span className="text-sm font-medium">{user.name}</span>
-                    <span className="text-sm">{user.email}</span>
-                    <Badge variant="outline">{user.role}</Badge>
-                    <Badge className="bg-green-100 text-green-800" variant="secondary">
-                      {user.status}
-                    </Badge>
-                    <span className="text-sm text-gray-500">{user.lastLogin}</span>
-                    <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm">
-                        <Crown className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        ✏️
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        🔒
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="products" className="space-y-4">
-          <Card>
-            <CardHeader>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Product Management</CardTitle>
-                <Button size="sm" className="bg-lime-400 text-teal-800 hover:bg-lime-500">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Product
-                </Button>
+                <div className="flex gap-2">
+                  <AddProductDialog
+                    userId={userId ?? ''}
+                    pharmacyId={pharmacyCode}
+                    onProductAdded={() => window.location.reload()}
+                  />
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
-                  <span>Product Name</span>
-                  <span>Category</span>
-                  <span>Stock</span>
-                  <span>Price</span>
-                  <span>Sales</span>
-                  <span>Actions</span>
-                </div>
+            <CardContent className="space-y-3">
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/products'}>
+                  <BoxIcon className="w-14 h-14 mr-2" />
+                  View Products
+                </Button>
+              </CardContent>
+            </Card>
 
-                {/* Mock product data */}
-                {[
-                  {
-                    name: "Paracetamol 500mg",
-                    category: "Pain Relief",
-                    stock: 150,
-                    price: 2.5,
-                    sales: 45,
-                  },
-                  {
-                    name: "Ibuprofen 400mg",
-                    category: "Pain Relief",
-                    stock: 75,
-                    price: 3.75,
-                    sales: 32,
-                  },
-                ].map((product, index) => (
-                  <div key={index} className="grid grid-cols-6 gap-4 items-center py-3 border-b border-gray-100">
-                    <span className="text-sm font-medium">{product.name}</span>
-                    <span className="text-sm">{product.category}</span>
-                    <span className="text-sm">{product.stock}</span>
-                    <span className="text-sm">${product.price.toFixed(2)}</span>
-                    <span className="text-sm">{product.sales} sold</span>
-                    <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm">
-                        👁️
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        ✏️
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        📊
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales Reports</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Monthly Sales Report
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Product Performance
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    User Activity Report
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Billing History
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4">

@@ -9,7 +9,7 @@ export type PaymentHistory = Database["public"]["Tables"]["payment_history"]["Ro
 
 // Check if user is super admin
 export async function isSuperAdmin(userId: string): Promise<boolean> {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("super_admins")
@@ -23,7 +23,7 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 
 // Check if user is pharmacy admin
 export async function isPharmacyAdmin(userId: string, pharmacyId: string): Promise<boolean> {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("pharmacy_users")
@@ -39,7 +39,7 @@ export async function isPharmacyAdmin(userId: string, pharmacyId: string): Promi
 
 // Get pharmacy admin dashboard stats
 export async function getPharmacyAdminStats(pharmacyId: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("get_pharmacy_admin_stats", {
     p_pharmacy_id: pharmacyId,
@@ -55,7 +55,7 @@ export async function getPharmacyAdminStats(pharmacyId: string) {
 
 // Get super admin dashboard stats
 export async function getSuperAdminStats() {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("get_super_admin_stats")
 
@@ -77,7 +77,7 @@ export async function createPharmacyUserByAdmin(
   },
   adminUserId: string,
 ) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   // Create user in auth
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -123,7 +123,7 @@ export async function createPharmacyUserByAdmin(
 
 // Get product sales report
 export async function getProductSalesReport(pharmacyId: string, startDate?: string, endDate?: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("get_product_sales_report", {
     p_pharmacy_id: pharmacyId,
@@ -141,7 +141,7 @@ export async function getProductSalesReport(pharmacyId: string, startDate?: stri
 
 // Calculate monthly billing
 export async function calculateMonthlyBilling(pharmacyId: string, periodStart: string, periodEnd: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("calculate_monthly_billing", {
     p_pharmacy_id: pharmacyId,
@@ -159,7 +159,7 @@ export async function calculateMonthlyBilling(pharmacyId: string, periodStart: s
 
 // Get billing details for pharmacy
 export async function getPharmacyBilling(pharmacyId: string, page = 1, limit = 10) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error, count } = await supabase
     .from("billing_details")
@@ -178,7 +178,7 @@ export async function getPharmacyBilling(pharmacyId: string, page = 1, limit = 1
 
 // Get all pharmacies (super admin)
 export async function getAllPharmacies(page = 1, limit = 10) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error, count } = await supabase
     .from("pharmacies")
@@ -196,7 +196,7 @@ export async function getAllPharmacies(page = 1, limit = 10) {
 
 // Get all billing details (super admin)
 export async function getAllBillingDetails(page = 1, limit = 10, status?: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   let query = supabase
     .from("billing_details")
@@ -230,7 +230,7 @@ export async function getAllBillingDetails(page = 1, limit = 10, status?: string
 
 // Generate invoice
 export async function generateInvoice(billingId: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("generate_pharmacy_invoice", {
     p_billing_id: billingId,
@@ -246,7 +246,7 @@ export async function generateInvoice(billingId: string) {
 
 // Deactivate pharmacy users
 export async function deactivatePharmacyUsers(pharmacyId: string, adminUserId: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase.rpc("deactivate_pharmacy_users", {
     p_pharmacy_id: pharmacyId,
@@ -272,7 +272,7 @@ export async function deactivatePharmacyUsers(pharmacyId: string, adminUserId: s
 
 // Promote user to admin
 export async function promoteUserToAdmin(userId: string, pharmacyId: string, promotedBy: string) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("pharmacy_users")
@@ -294,6 +294,49 @@ export async function promoteUserToAdmin(userId: string, pharmacyId: string, pro
     entity_type: "user",
     entity_id: userId,
     details: { role: "admin", action: "promoted_to_admin" },
+    pharmacy_id: pharmacyId,
+  })
+
+  return { error: null, data }
+}
+
+// Get all pharmacies with sales data (super admin)
+export async function getAllPharmaciesWithSales(page = 1, limit = 50) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase.rpc("get_pharmacies_with_sales", {
+    p_page: page,
+    p_limit: limit,
+  })
+
+  if (error) {
+    console.error("Error fetching pharmacies with sales:", error)
+    return { error, data: null }
+  }
+
+  return { error: null, data }
+}
+
+// Revoke access for all pharmacy users
+export async function revokePharmacyAccess(pharmacyId: string, adminUserId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase.rpc("revoke_pharmacy_access", {
+    p_pharmacy_id: pharmacyId,
+  })
+
+  if (error) {
+    console.error("Error revoking pharmacy access:", error)
+    return { error, data: null }
+  }
+
+  // Log activity
+  await logActivity({
+    user_id: adminUserId,
+    action: "revoke_access",
+    entity_type: "pharmacy",
+    entity_id: pharmacyId,
+    details: { affected_users: data },
     pharmacy_id: pharmacyId,
   })
 

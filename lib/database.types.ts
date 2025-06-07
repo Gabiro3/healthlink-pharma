@@ -43,6 +43,9 @@ export interface Database {
           role: string
           created_at: string
           is_active: boolean
+          full_name: string | null
+          contact_number: string | null
+          last_sign_in_at: string | null
         }
         Insert: {
           id?: string
@@ -51,6 +54,9 @@ export interface Database {
           role: string
           created_at?: string
           is_active?: boolean
+          full_name?: string | null
+          contact_number?: string | null
+          last_sign_in_at?: string | null
         }
         Update: {
           id?: string
@@ -59,6 +65,32 @@ export interface Database {
           role?: string
           created_at?: string
           is_active?: boolean
+          full_name?: string | null
+          contact_number?: string | null
+          last_sign_in_at?: string | null
+        }
+      }
+      super_admins: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+          is_active: boolean
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+          is_active?: boolean
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+          is_active?: boolean
+          created_by?: string | null
         }
       }
       products: {
@@ -74,6 +106,8 @@ export interface Database {
           reorder_level: number
           pharmacy_id: string
           is_active: boolean
+          purchased_from: string | null
+          created_by: string
         }
         Insert: {
           id?: string
@@ -87,6 +121,8 @@ export interface Database {
           reorder_level: number
           pharmacy_id: string
           is_active?: boolean
+          purchased_from?: string | null
+          created_by: string
         }
         Update: {
           id?: string
@@ -100,6 +136,8 @@ export interface Database {
           reorder_level?: number
           pharmacy_id?: string
           is_active?: boolean
+          purchased_from?: string | null
+          created_by?: string
         }
       }
       sales: {
@@ -359,6 +397,129 @@ export interface Database {
           allocated_amount?: number
           spent_amount?: number
           pharmacy_id?: string
+        }
+      }
+      expenses: {
+        Row: {
+          id: string
+          created_at: string
+          description: string
+          amount: number
+          expense_date: string
+          payment_method: string
+          category: string
+          recorded_by: string
+          pharmacy_id: string
+          receipt_url: string | null
+          is_approved: boolean
+          approved_by: string | null
+          approved_at: string | null
+          budget_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          description: string
+          amount: number
+          expense_date: string
+          payment_method: string
+          category: string
+          recorded_by: string
+          pharmacy_id: string
+          receipt_url?: string | null
+          is_approved?: boolean
+          approved_by?: string | null
+          approved_at?: string | null
+          budget_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          description?: string
+          amount?: number
+          expense_date?: string
+          payment_method?: string
+          category?: string
+          recorded_by?: string
+          pharmacy_id?: string
+          receipt_url?: string | null
+          is_approved?: boolean
+          approved_by?: string | null
+          approved_at?: string | null
+          budget_id?: string | null
+        }
+      }
+      billing_details: {
+        Row: {
+          id: string
+          created_at: string
+          pharmacy_id: string
+          billing_period_start: string
+          billing_period_end: string
+          total_amount: number
+          status: string
+          due_date: string
+          invoice_number: string
+          generated_by: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          pharmacy_id: string
+          billing_period_start: string
+          billing_period_end: string
+          total_amount: number
+          status: string
+          due_date: string
+          invoice_number: string
+          generated_by: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          pharmacy_id?: string
+          billing_period_start?: string
+          billing_period_end?: string
+          total_amount?: number
+          status?: string
+          due_date?: string
+          invoice_number?: string
+          generated_by?: string
+        }
+      }
+      payment_history: {
+        Row: {
+          id: string
+          created_at: string
+          billing_id: string
+          amount_paid: number
+          payment_date: string
+          payment_method: string
+          transaction_id: string
+          status: string
+          processed_by: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          billing_id: string
+          amount_paid: number
+          payment_date: string
+          payment_method: string
+          transaction_id: string
+          status: string
+          processed_by: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          billing_id?: string
+          amount_paid?: number
+          payment_date?: string
+          payment_method?: string
+          transaction_id?: string
+          status?: string
+          processed_by?: string
         }
       }
     }

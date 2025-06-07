@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,7 +45,7 @@ export function LoginForm() {
 
       // Proceed with authentication
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       })
@@ -53,6 +54,25 @@ export function LoginForm() {
         throw new Error(authError.message)
       }
 
+      // Verify user belongs to the pharmacy and update last sign-in
+      const verifyUserResponse = await fetch("/api/auth/verify-user-pharmacy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pharmacyCode: formData.pharmacyCode,
+          userId: authData.user.id,
+        }),
+      })
+
+      if (!verifyUserResponse.ok) {
+        // Sign out the user if they don't belong to the pharmacy
+        await supabase.auth.signOut()
+        const errorData = await verifyUserResponse.json()
+        throw new Error(errorData.error || "You are not authorized to access this pharmacy")
+      }
+
+      // Success - redirect to dashboard
+      router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -68,8 +88,13 @@ export function LoginForm() {
           <div className="text-center">
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
-                <div className="w-12 h-12 bg-teal-800 rounded-lg flex items-center justify-center">
-                  <Pill className="w-6 h-6 text-lime-400" />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+                  <Image
+                    src="/logo.png"
+                    alt="Healthlink Pharma Logo"
+                    className="rounded-lg"
+                    width={48}
+                    height={48} />
                 </div>
               </div>
               <span className="ml-3 text-2xl font-bold text-gray-900">Healthlink Pharma</span>
@@ -135,7 +160,7 @@ export function LoginForm() {
                   </Alert>
                 )}
 
-                <Button type="submit" className="w-full bg-teal-800 hover:bg-blue-700" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-teal-800 hover:bg-teal-700" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -158,7 +183,7 @@ export function LoginForm() {
             Streamline your pharmacy operations with our comprehensive management system. Track inventory, manage sales,
             and grow your business efficiently.
           </p>
-          <Button variant="outline" className="text-blue-600 bg-white hover:bg-gray-100">
+          <Button variant="outline" className="text-lime-400 bg-white hover:bg-gray-100">
             Learn More
           </Button>
         </div>

@@ -8,9 +8,23 @@ import { Sidebar } from "@/components/layout/sidebar"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Pharmly - Pharmacy Management System",
-  description: "Comprehensive pharmacy management solution",
-    generator: 'v0.dev'
+  title: "Healthlink Pharma - Pharmacy Management System",
+  keywords: [
+    "pharmacy management",
+    "healthcare software",
+    "pharmacy software",
+    "drug inventory",
+    "pharmacy billing",
+    "patient management",
+    "pharmacy POS",
+    "pharmacy administration",
+    "pharmacy analytics",
+    "pharmacy reporting"],
+  authors: [{ name: "Healthlink Pharma Team", url: "https://healthlinkpharma.com" }],
+  description: "Healthlink Pharma is a comprehensive pharmacy management system designed to streamline operations, enhance patient care, and improve overall efficiency in pharmacies.",
+  icons: {
+    icon: "/logo.png",
+  },
 }
 
 export default async function RootLayout({
